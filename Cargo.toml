@@ -5,14 +5,7 @@ edition = "2024"
 
 [dependencies]
 
-[lib]
-name = "minimalist"
-path = "src/lib.rs"
-crate-type = ["staticlib", "rlib"]
 
-[[bin]]
-name = "kernel"
-path = "src/main.rs"
 
 [profile.dev]
 panic = "abort"
