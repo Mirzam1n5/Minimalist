@@ -4,6 +4,15 @@ pub struct Uart {
     base_address: usize,
 }
 
+impl Write for Uart {
+    fn write_str(&mut self, out: &str) -> Result<(), Error> {
+        for c in out.bytes() {
+            self.put(c);
+        }
+        Ok(())
+    }
+} 
+
 impl Uart {
     pub fn new(base_address: usize) -> Self {
         Uart {
@@ -11,18 +20,31 @@ impl Uart {
         }
     }
 
-    pub fn init(&mut self) {
-        let ptr = self.base_address as *mut u8;
-        unsafe {
-            ptr.add(3).write_volatile(0b11);
-            ptr.add(2).write_volatile(1);
-            ptr.add(1).write_volatile(1);
-        }
+   pub fn init(&mut self) {
+    let ptr = self.base_address as *mut u8;
+    unsafe {
+        ptr.add(3).write_volatile((1 << 0) | (1 << 1));
+        ptr.add(2).write_volatile(1 << 0);
+        //ptr.add(1).write_volatile(1 << 0);
+
+        let divisor: u16 = 592;
+		let divisor_least: u8 = (divisor & 0xff) as u8;
+		let divisor_most:  u8 = (divisor >> 8) as u8;
+        let lcr = ptr.add(3).read_volatile();
+
+		ptr.add(3).write_volatile(lcr | 1 << 7);
+        ptr.add(0).write_volatile(divisor_least);
+		ptr.add(1).write_volatile(divisor_most);
+        ptr.add(3).write_volatile(lcr);
     }
+}
 
     pub fn put(&mut self, c: u8) {
         let ptr = self.base_address as *mut u8;
         unsafe {
+            while (ptr.add(5).read_volatile() & 0x20) == 0 {
+
+            }
             ptr.add(0).write_volatile(c);
         }
     }
@@ -39,11 +61,3 @@ impl Uart {
     }
 }
 
-impl Write for Uart {
-    fn write_str(&mut self, out: &str) -> Result<(), Error> {
-        for c in out.bytes() {
-            self.put(c);
-        }
-        Ok(())
-    }
-}
