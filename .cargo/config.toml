@@ -2,7 +2,13 @@
 target = "riscv64gc-unknown-none-elf"
 
 [target.riscv64gc-unknown-none-elf]
-runner = "qemu-system-riscv64 -machine virt -cpu rv64 -smp 4 -m 128M -serial mon:stdio -bios none -kernel"
+runner = "qemu-system-riscv64 -machine virt -smp 4 -m 128M -serial stdio -display none -bios none -kernel"
 rustflags = [
     "-C", "link-arg=-Tsrc/lds/virt.lds",
 ]
+
+[profile.dev]
+opt-level = 2
+
+[profile.release]
+opt-level = 3
